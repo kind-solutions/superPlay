@@ -1,7 +1,7 @@
 ﻿using Microsoft.AspNetCore.SignalR.Client;
 using Microsoft.AspNetCore.Http.Connections;
 using Google.Protobuf.Examples.AddressBook;
-
+using Google.Protobuf;
 
 var token = String.Empty;
 var connection = new HubConnectionBuilder()
@@ -66,7 +66,8 @@ while (true)
 {
     try
     {
-        await connection.SendAsync("SendMessage", "test", new byte[] { 1, 2, 3 });
+        
+        await connection.SendAsync("SendMessage", "test", p.ToByteArray());
         await Task.Delay(300);
 
     }

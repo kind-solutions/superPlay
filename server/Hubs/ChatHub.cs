@@ -1,5 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.SignalR;
+using Google.Protobuf.Examples.AddressBook;
+using Google.Protobuf;
 
 namespace SignalRChat.Hubs
 {
@@ -15,37 +17,35 @@ namespace SignalRChat.Hubs
         [AllowAnonymous]
         public async Task Login(string udid)
         {
-            _logger.LogInformation("test");
 
-            var playerId = Guid.NewGuid();
+            var playerId = Guid.NewGuid(); //TODO
             await Clients.Caller.SendAsync("LoginResponse", playerId);
         }
 
 
 
         [Authorize(Policy = "CustomHubAuthorizatioPolicy")]
-        public async Task UpdateResources(string user, string message)
+        public async Task UpdateResources(byte[] payload)
         {
-            _logger.LogInformation("test");
+            await Task.Delay(1);
+            //TODO
 
-            await Clients.Others.SendAsync("ReceiveMessage", user, message);
         }
 
         [Authorize(Policy = "CustomHubAuthorizatioPolicy")]
-        public async Task SendGift(string user, string message)
+        public async Task SendGift(byte[] payload)
         {
-            _logger.LogInformation("test");
-
-            await Clients.Others.SendAsync("ReceiveMessage", user, message);
+            await Task.Delay(1);
+            //TODO
         }
 
 
         [Authorize(Policy = "CustomHubAuthorizatioPolicy")]
         public async Task SendMessage(string user, byte[] message)
         {
-            _logger.LogInformation(message[0].ToString());
-            _logger.LogInformation(message[1].ToString());
-            _logger.LogInformation(message[2].ToString());
+            await Task.Delay(1);
+            var p = Person.Parser.ParseFrom(message);
+            _logger.LogInformation(p.Email);
 
         }
     }
