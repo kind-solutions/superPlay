@@ -7,7 +7,7 @@
             "type": "process",
             "args": [
                 "build",
-                "${workspaceFolder}/superPlay.csproj",
+                "${workspaceFolder}/server/superPlay.csproj",
                 "/property:GenerateFullPaths=true",
                 "/consoleloggerparameters:NoSummary"
             ],
@@ -19,7 +19,7 @@
             "type": "process",
             "args": [
                 "publish",
-                "${workspaceFolder}/superPlay.csproj",
+                "${workspaceFolder}/server/superPlay.csproj",
                 "/property:GenerateFullPaths=true",
                 "/consoleloggerparameters:NoSummary"
             ],
@@ -33,7 +33,7 @@
                 "watch",
                 "run",
                 "--project",
-                "${workspaceFolder}/superPlay.csproj"
+                "${workspaceFolder}/server/superPlay.csproj"
             ],
             "problemMatcher": "$msCompile"
         }
