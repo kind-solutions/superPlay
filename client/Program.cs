@@ -44,6 +44,7 @@ using (ClientWebSocket ws = new ClientWebSocket())
                             Encoding.UTF8.GetString(receiveBuffer, 0,
                                                         offset));
 
-        await ws.CloseAsync(WebSocketCloseStatus.NormalClosure, "", CancellationToken.None);
     }
+    await ws.CloseAsync(WebSocketCloseStatus.NormalClosure, "", CancellationToken.None);
+
 }
