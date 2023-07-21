@@ -1,15 +1,17 @@
 ﻿using Microsoft.AspNetCore.SignalR.Client;
 using Microsoft.AspNetCore.Http.Connections;
-using Google.Protobuf.Examples.AddressBook;
 using Google.Protobuf;
 
-var token = String.Empty;
+using Superplay.Protobuf.Messages;
+
+Player? LoggedInUser = null;
+
 var connection = new HubConnectionBuilder()
     .WithUrl("wss://localhost:7133/chatHub", HttpTransportType.WebSockets, options =>
     {
         options.AccessTokenProvider = () =>
         {
-            return Task.FromResult(token);
+            return Task.FromResult(LoggedInUser?.Id);
         };
     })
     .Build();
@@ -30,19 +32,15 @@ connection.Reconnecting += async (error) =>
     await Task.Delay(1);
     Console.WriteLine("Connection Reconnecting");
 };
-connection.On<string, string>("ReceiveMessage", (user, message) =>
-{
-
-    var newMessage = $"ReceiveMessage: {user}: {message}";
-    Console.WriteLine(newMessage);
-});
 
 var login = new TaskCompletionSource<bool>();
 
-connection.On<string>("LoginResponse", async playerId =>
+connection.On<byte[]>("LoginResponse", async payload =>
 {
-    token = playerId;
-    Console.WriteLine($"LoginResponse received token={playerId}");
+    var response = LoginResponse.Parser.ParseFrom(payload);
+    LoggedInUser = response.Myself;
+
+    Console.WriteLine($"LoginResponse received token={LoggedInUser.Id}");
 
     //restart connection so the token is correctly set
     await connection.StopAsync();
@@ -52,22 +50,29 @@ connection.On<string>("LoginResponse", async playerId =>
 
 await connection.StartAsync();
 
-await connection.SendAsync("Login", "1234");
+var loginRequest = new LoginRequest
+{
+    Udid = "1234",
+};
+
+await connection.SendAsync("Login", loginRequest.ToByteArray());
 
 await login.Task;
 
-var p = new Person
-{
-    Name = "gigi",
-    Id = 1,
-    Email = "gigi@gigi.com"
-};
+
+var random = new Random();
 while (true)
 {
     try
     {
-        
-        await connection.SendAsync("SendMessage", "test", p.ToByteArray());
+
+        var req = new UpdateResourcesRequest
+        {
+            Type = random.NextDouble() > 0.5f ? ResourceType.Coins: ResourceType.Rolls,
+            Ammount = new ResourceValue { Value = random.Next(-100, 100) },
+        };
+        Console.WriteLine($"Sending {nameof(UpdateResourcesRequest)} {req} with size: {req.CalculateSize()}kB");
+        await connection.SendAsync("UpdateResources", req.ToByteArray());
         await Task.Delay(300);
 
     }

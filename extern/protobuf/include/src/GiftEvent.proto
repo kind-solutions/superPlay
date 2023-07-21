@@ -1,0 +1,15 @@
+syntax = "proto3";
+
+import "ResourceType.proto";
+import "ResourceValue.proto";
+import "Player.proto";
+
+package Superplay;
+
+option csharp_namespace = "Superplay.Protobuf.Messages";
+
+message GiftEvent {
+  Player from = 1;
+  ResourceType type = 2;
+  ResourceValue ammount = 3;
+}

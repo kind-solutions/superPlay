@@ -1,7 +1,8 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.SignalR;
-using Google.Protobuf.Examples.AddressBook;
 using Google.Protobuf;
+
+using Superplay.Protobuf.Messages;
 
 namespace SignalRChat.Hubs
 {
@@ -15,11 +16,21 @@ namespace SignalRChat.Hubs
         }
 
         [AllowAnonymous]
-        public async Task Login(string udid)
+        public async Task Login(byte[] payload)
         {
+            var login = LoginRequest.Parser.ParseFrom(payload);
 
-            var playerId = Guid.NewGuid(); //TODO
-            await Clients.Caller.SendAsync("LoginResponse", playerId);
+            _logger.LogTrace($"Received login request from udid={login.Udid}"); 
+
+            var playerId = Guid.NewGuid().ToString(); //TODO
+
+            var res = new LoginResponse
+            {
+                Myself = new Player {
+                    Id = playerId,
+                },
+            };
+            await Clients.Caller.SendAsync("LoginResponse", res.ToByteArray());
         }
 
 
@@ -27,6 +38,9 @@ namespace SignalRChat.Hubs
         [Authorize(Policy = "CustomHubAuthorizatioPolicy")]
         public async Task UpdateResources(byte[] payload)
         {
+            var req = UpdateResourcesRequest.Parser.ParseFrom(payload);
+
+            _logger.LogInformation($"{nameof(UpdateResources)} Received {req} with size {payload.Count()} B");
             await Task.Delay(1);
             //TODO
 
@@ -39,14 +53,5 @@ namespace SignalRChat.Hubs
             //TODO
         }
 
-
-        [Authorize(Policy = "CustomHubAuthorizatioPolicy")]
-        public async Task SendMessage(string user, byte[] message)
-        {
-            await Task.Delay(1);
-            var p = Person.Parser.ParseFrom(message);
-            _logger.LogInformation(p.Email);
-
-        }
     }
 }

@@ -1,0 +1,10 @@
+syntax = "proto3";
+import "ResourceValue.proto";
+
+package Superplay;
+
+option csharp_namespace = "Superplay.Protobuf.Messages";
+
+message UpdateResourcesResponse {
+  ResourceValue balance = 1;
+}

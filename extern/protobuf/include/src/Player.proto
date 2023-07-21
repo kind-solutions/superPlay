@@ -1,0 +1,9 @@
+syntax = "proto3";
+
+package Superplay;
+
+option csharp_namespace = "Superplay.Protobuf.Messages";
+
+message Player {
+  string id = 1;
+}
