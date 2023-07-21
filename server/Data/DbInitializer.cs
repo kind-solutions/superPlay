@@ -8,60 +8,54 @@ namespace Superplay.Data
     {
         public static void Initialize(IServiceProvider serviceProvider)
         {
-            var context = serviceProvider.GetRequiredService<ApplicationDbContext>();
-
-            context.Database.EnsureCreated();
-
-            // Look for any players.
-            if (context.Players.Any())
+            using (var context = serviceProvider.GetRequiredService<ApplicationDbContext>())
             {
-                foreach (var player in context.Players)
+                context.Database.EnsureCreated();
+
+                // Look for any players.
+                if (context.Players.Any())
                 {
-                    Console.WriteLine(player.Id);
-                    foreach (var device in player.Devices)
+
+                    foreach (var device in context.Devices)
                     {
-                        Console.WriteLine($"\t {device.Id}");
+                        Console.WriteLine($"deviceId={device.Id} playerId={device.PlayerId}");
                     }
+                    return;   // DB has been seeded
                 }
-                foreach (var device in context.Devices)
+                var random = new Random(12345);
+
+                var numberOfUsers = random.Next(5, 50);
+
+                for (int i = 0; i < numberOfUsers; i++)
                 {
-                    Console.WriteLine($"\t {device.Id} {device.PlayerId}");
-                }
-                return;   // DB has been seeded
-            }
-            var random = new Random(12345);
-
-            var numberOfUsers = random.Next(5, 50);
-
-            for (int i = 0; i < numberOfUsers; i++)
-            {
-                var player = new Player
-                {
-                    Id = Guid.NewGuid(),
-                    Coins = random.Next(0, 10000),
-                    Rolls = random.Next(0, 1000)
-                };
-
-                context.Players.Add(player);
-
-                var numberOfDevicesForPlayer = random.Next(5, 50);
-
-                for (int j = 0; j < numberOfDevicesForPlayer; j++)
-                {
-                    var coinFlip = random.NextDouble() < 0.5;
-
-                    var device = new Device
+                    var player = new Player
                     {
                         Id = Guid.NewGuid(),
-                        PlayerId = player.Id,
-                        Type = coinFlip ? DeviceType.iOS : DeviceType.Android
+                        Coins = random.Next(0, 10000),
+                        Rolls = random.Next(0, 1000)
                     };
 
-                    context.Devices.Add(device);
-                }
+                    context.Players.Add(player);
 
+                    var numberOfDevicesForPlayer = random.Next(5, 50);
+
+                    for (int j = 0; j < numberOfDevicesForPlayer; j++)
+                    {
+                        var coinFlip = random.NextDouble() < 0.5;
+
+                        var device = new Device
+                        {
+                            Id = Guid.NewGuid(),
+                            PlayerId = player.Id,
+                            Type = coinFlip ? DeviceType.iOS : DeviceType.Android
+                        };
+
+                        context.Devices.Add(device);
+                    }
+
+                }
+                context.SaveChanges();
             }
-            context.SaveChanges();
         }
     }
 }

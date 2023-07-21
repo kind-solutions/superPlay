@@ -1,12 +1,13 @@
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 
-using SignalRChat.Hubs;
 using Serilog;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http.Connections;
 
+using Superplay.Hubs;
 using Superplay.Data;
+using Superplay.Authorization;
 
 var builder = WebApplication.CreateBuilder(args);
 var DbPath = "super.db";
@@ -18,10 +19,10 @@ Log.Logger = new LoggerConfiguration()
     .CreateLogger();
 
 
-builder.Services.AddScoped<IAuthorizationHandler, UdidAuthorizationHandler>();
+builder.Services.AddScoped<IAuthorizationHandler, SuperplayAuthorizationHandler>();
 
 builder.Services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
-builder.Services.AddSingleton<IUserIdProvider, UdidBasedUserIdProvider>();
+builder.Services.AddSingleton<IUserIdProvider, SuperplayUserProvider>();
 
 builder.Services.AddAuthorization(options =>
 {
