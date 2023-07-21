@@ -1,3 +1,4 @@
+using System.Net.WebSockets;
 using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -5,7 +6,7 @@ var builder = WebApplication.CreateBuilder(args);
 Log.Logger = new LoggerConfiguration()
     .WriteTo.Console()
     .CreateLogger();
-    
+
 // Add services to the container.
 
 builder.Services.AddControllers();
@@ -34,6 +35,8 @@ var webSocketOptions = new WebSocketOptions
 {
     KeepAliveInterval = TimeSpan.FromMinutes(2)
 };
-app.UseWebSockets();
+app.UseWebSockets(webSocketOptions);
+
 
 app.Run();
+
