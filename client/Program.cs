@@ -52,7 +52,7 @@ await connection.StartAsync();
 
 var loginRequest = new LoginRequest
 {
-    Udid = "1234",
+    Udid = "0a9ca9a6-d52b-4072-baca-2e5a8a419ad6",
 };
 
 await connection.SendAsync("Login", loginRequest.ToByteArray());

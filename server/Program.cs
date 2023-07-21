@@ -18,8 +18,9 @@ Log.Logger = new LoggerConfiguration()
     .CreateLogger();
 
 
+builder.Services.AddScoped<IAuthorizationHandler, UdidAuthorizationHandler>();
+
 builder.Services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
-builder.Services.AddSingleton<IAuthorizationHandler, UdidAuthorizationHandler>();
 builder.Services.AddSingleton<IUserIdProvider, UdidBasedUserIdProvider>();
 
 builder.Services.AddAuthorization(options =>

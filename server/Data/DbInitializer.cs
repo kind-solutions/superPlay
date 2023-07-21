@@ -15,6 +15,18 @@ namespace Superplay.Data
             // Look for any players.
             if (context.Players.Any())
             {
+                foreach (var player in context.Players)
+                {
+                    Console.WriteLine(player.Id);
+                    foreach (var device in player.Devices)
+                    {
+                        Console.WriteLine($"\t {device.Id}");
+                    }
+                }
+                foreach (var device in context.Devices)
+                {
+                    Console.WriteLine($"\t {device.Id} {device.PlayerId}");
+                }
                 return;   // DB has been seeded
             }
             var random = new Random(12345);
@@ -42,7 +54,7 @@ namespace Superplay.Data
                     {
                         Id = Guid.NewGuid(),
                         PlayerId = player.Id,
-                        Type =  coinFlip ? DeviceType.iOS : DeviceType.Android
+                        Type = coinFlip ? DeviceType.iOS : DeviceType.Android
                     };
 
                     context.Devices.Add(device);

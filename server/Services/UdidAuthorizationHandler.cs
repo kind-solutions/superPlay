@@ -1,16 +1,19 @@
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
 using Microsoft.Net.Http.Headers;
+using Superplay.Data;
 using System.Linq;
+using System;
 using System.Threading.Tasks;
 
 public class UdidAuthorizationHandler : AuthorizationHandler<UuidAuthorizationRequirement>
 {
     readonly IHttpContextAccessor _httpContextAccessor;
+    readonly ApplicationDbContext _context;
 
-    public UdidAuthorizationHandler(IHttpContextAccessor httpContextAccessor)
+    public UdidAuthorizationHandler(IHttpContextAccessor httpContextAccessor, ApplicationDbContext context)
     {
         _httpContextAccessor = httpContextAccessor;
+        _context = context;
     }
     protected override Task HandleRequirementAsync(AuthorizationHandlerContext context, UuidAuthorizationRequirement requirement)
     {
@@ -28,17 +31,27 @@ public class UdidAuthorizationHandler : AuthorizationHandler<UuidAuthorizationRe
                 return Task.CompletedTask;
             }
         }
-
+        var playerid = username.ToString().Split(" ");
+        if (playerid.Length != 2) // Bearer <token>
+        {
+            context.Fail();
+            return Task.CompletedTask;
+        }
         // // Not a guid
+        if (!Guid.TryParse(playerid[1], out var id))
+        {
+            context.Fail();
+            return Task.CompletedTask;
+        }
+        var player = _context.Players.Find(id);
 
-        // if (!Guid.TryParse(username, out _))
-        // {
-        //     context.Fail();
-        //     return Task.CompletedTask;
-        // }
-
+        if (player == null)
+        {
+            context.Fail();
+            return Task.CompletedTask;
+        }
         context.Succeed(requirement);
-
+        
         // Return completed task  
         return Task.CompletedTask;
     }
