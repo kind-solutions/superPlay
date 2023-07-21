@@ -1,9 +1,10 @@
 ﻿using Microsoft.AspNetCore.SignalR.Client;
 
-
-
 var connection = new HubConnectionBuilder()
-    .WithUrl("wss://localhost:7133/chatHub")
+    .WithUrl("wss://localhost:7133/chatHub", options =>
+    {
+        options.AccessTokenProvider = () => Task.FromResult("playerid");
+    })
     .Build();
 
 connection.Closed += async (error) =>
