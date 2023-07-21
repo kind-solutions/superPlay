@@ -1,11 +1,24 @@
-using System.Security.Claims;
 using Microsoft.AspNetCore.SignalR;
 
 
 public class UdidBasedUserIdProvider : IUserIdProvider
 {
-    public virtual string GetUserId(HubConnectionContext connection)
+    readonly IHttpContextAccessor _httpContextAccessor;
+
+    public UdidBasedUserIdProvider(IHttpContextAccessor httpContextAccessor)
     {
-        return connection.User?.FindFirst(ClaimTypes.Sid)?.Value!;
+        _httpContextAccessor = httpContextAccessor;
+    }
+
+    public string GetUserId(HubConnectionContext connection)
+    {
+        if (_httpContextAccessor.HttpContext == null)
+        {
+            return String.Empty;
+        }
+
+        var id = _httpContextAccessor.HttpContext.Request.Query["username"].ToString();
+
+        return id;
     }
 }
