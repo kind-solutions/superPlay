@@ -1,8 +1,11 @@
 ﻿using Microsoft.AspNetCore.SignalR.Client;
+using Microsoft.AspNetCore.Http.Connections;
+using Google.Protobuf.Examples.AddressBook;
+
 
 var token = String.Empty;
 var connection = new HubConnectionBuilder()
-    .WithUrl("wss://localhost:7133/chatHub", Microsoft.AspNetCore.Http.Connections.HttpTransportType.WebSockets, options =>
+    .WithUrl("wss://localhost:7133/chatHub", HttpTransportType.WebSockets, options =>
     {
         options.AccessTokenProvider = () =>
         {
@@ -14,9 +17,19 @@ var connection = new HubConnectionBuilder()
 connection.Closed += async (error) =>
 {
     await Task.Delay(1);
-    Console.WriteLine("Logged");
+    Console.WriteLine("Connection Closed");
+};
+connection.Reconnected += async (error) =>
+{
+    await Task.Delay(1);
+    Console.WriteLine("Connection Reconnected");
 };
 
+connection.Reconnecting += async (error) =>
+{
+    await Task.Delay(1);
+    Console.WriteLine("Connection Reconnecting");
+};
 connection.On<string, string>("ReceiveMessage", (user, message) =>
 {
 
@@ -24,7 +37,7 @@ connection.On<string, string>("ReceiveMessage", (user, message) =>
     Console.WriteLine(newMessage);
 });
 
-var t = new TaskCompletionSource<bool>();
+var login = new TaskCompletionSource<bool>();
 
 connection.On<string>("LoginResponse", async playerId =>
 {
@@ -34,21 +47,26 @@ connection.On<string>("LoginResponse", async playerId =>
     //restart connection so the token is correctly set
     await connection.StopAsync();
     await connection.StartAsync();
-    t.SetResult(true);
+    login.SetResult(true);
 });
 
 await connection.StartAsync();
 
 await connection.SendAsync("Login", "1234");
 
-await t.Task;
+await login.Task;
 
-
+var p = new Person
+{
+    Name = "gigi",
+    Id = 1,
+    Email = "gigi@gigi.com"
+};
 while (true)
 {
     try
     {
-        await connection.SendAsync("SendMessage", "test", "msg");
+        await connection.SendAsync("SendMessage", "test", new byte[] { 1, 2, 3 });
         await Task.Delay(300);
 
     }

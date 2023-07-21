@@ -21,13 +21,7 @@ namespace SignalRChat.Hubs
             await Clients.Caller.SendAsync("LoginResponse", playerId);
         }
 
-        [Authorize(Policy = "CustomHubAuthorizatioPolicy")]
-        public async Task SendMessage(string user, string message)
-        {
-            _logger.LogInformation("test");
 
-            await Clients.Others.SendAsync("ReceiveMessage", user, message);
-        }
 
         [Authorize(Policy = "CustomHubAuthorizatioPolicy")]
         public async Task UpdateResources(string user, string message)
@@ -43,6 +37,16 @@ namespace SignalRChat.Hubs
             _logger.LogInformation("test");
 
             await Clients.Others.SendAsync("ReceiveMessage", user, message);
+        }
+
+
+        [Authorize(Policy = "CustomHubAuthorizatioPolicy")]
+        public async Task SendMessage(string user, byte[] message)
+        {
+            _logger.LogInformation(message[0].ToString());
+            _logger.LogInformation(message[1].ToString());
+            _logger.LogInformation(message[2].ToString());
+
         }
     }
 }
