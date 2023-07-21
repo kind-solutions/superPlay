@@ -7,7 +7,7 @@ using Superplay.Protobuf.Messages;
 Player? LoggedInUser = null;
 
 var connection = new HubConnectionBuilder()
-    .WithUrl("wss://localhost:7133/chatHub", HttpTransportType.WebSockets, options =>
+    .WithUrl("wss://localhost:5001/chatHub", HttpTransportType.WebSockets, options =>
     {
         options.AccessTokenProvider = () =>
         {
@@ -71,7 +71,7 @@ while (true)
             Type = random.NextDouble() > 0.5f ? ResourceType.Coins: ResourceType.Rolls,
             Ammount = new ResourceValue { Value = random.Next(-100, 100) },
         };
-        Console.WriteLine($"Sending {nameof(UpdateResourcesRequest)} {req} with size: {req.CalculateSize()}kB");
+        Console.WriteLine($"Sending {nameof(UpdateResourcesRequest)} {req} with size: {req.CalculateSize()}B");
         await connection.SendAsync("UpdateResources", req.ToByteArray());
         await Task.Delay(300);
 
