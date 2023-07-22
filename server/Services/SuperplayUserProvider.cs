@@ -7,79 +7,67 @@ namespace Superplay.Authorization;
 public class SuperplayUserProvider : IUserIdProvider
 {
     readonly IHttpContextAccessor _httpContextAccessor;
+    readonly ISessionCacheHandler _cache;
 
-    public SuperplayUserProvider(IHttpContextAccessor httpContextAccessor)
+    public SuperplayUserProvider(IHttpContextAccessor httpContextAccessor, ISessionCacheHandler cache)
     {
         _httpContextAccessor = httpContextAccessor;
+        _cache = cache;
     }
 
     public string GetUserId(HubConnectionContext connection)
     {
-        return GetUserId(_httpContextAccessor);
+        if (_cache.TryGetSession(connection.ConnectionId, out var session))
+        {
+            var (_, player) = session;
+
+            return player.ToString();
+        }
+        return GetDeviceId(_httpContextAccessor).ToString();
     }
 
-    public static string GetUserId(IHttpContextAccessor _httpContextAccessor)
+    public static Guid GetDeviceId(IHttpContextAccessor _httpContextAccessor)
     {
         if (_httpContextAccessor.HttpContext == null)
         {
-            return String.Empty;
+            return Guid.Empty;
         }
 
         if (!_httpContextAccessor.HttpContext.Request.Headers.TryGetValue(HeaderNames.Authorization, out var username))
         {
             if (!_httpContextAccessor.HttpContext.Request.Query.TryGetValue("access_token", out username))
             {
-                return String.Empty;
+                return Guid.Empty;
             }
         }
-        var playerid = username.ToString().Split(" ");
-        if (playerid.Length != 2) // Bearer <token>
-        {
-            return String.Empty;
-        }
-
-        return playerid[1];
-    }
-    public static Guid GetUserId(IHttpContextAccessor _httpContextAccessor, ILogger _logger)
-    {
-        if (_httpContextAccessor.HttpContext == null)
+        var deviceId = username.ToString().Split(" ");
+        if (deviceId.Length != 2) // Bearer <token>
         {
             return Guid.Empty;
         }
 
-        if (!_httpContextAccessor.HttpContext.Items.TryGetValue("player", out var data))
+        if (Guid.TryParse(deviceId[1], out var id))
         {
-            _logger.LogError($"{nameof(SuperplayAuthorizationHandler)} did not add playerData to HttpContext.");
-            return Guid.Empty;
+            return id;
         }
-        var id = data as string;
-
-        if (id == null)
-        {
-            _logger.LogError($"{nameof(SuperplayAuthorizationHandler)} did not add a string as playerData to HttpContext.");
-            return Guid.Empty;
-        }
-
-        if (!Guid.TryParse(id, out var playerId))
-        {
-            _logger.LogError($"The string added as playerData to HttpContext by {nameof(SuperplayAuthorizationHandler)} is not a GUID.");
-            return Guid.Empty;
-        }
-
-        return playerId;
+        return Guid.Empty;
     }
 
-    public static async Task<Player?> TryGetPlayer(ApplicationDbContext _dbContext, IHttpContextAccessor _httpContextAccessor, ILogger _logger)
+    public static Guid GetUserId(Microsoft.AspNetCore.SignalR.HubCallerContext context, ISessionCacheHandler _cache, ILogger _logger)
     {
-        if (_httpContextAccessor.HttpContext == null)
+        if (!_cache.TryGetPlayerFromConnection(context.ConnectionId, out var id))
         {
-            _logger.LogError($"{nameof(TryGetPlayer)} HttpContext is null.");
-            return null;
+            _logger.LogWarning($"{nameof(GetUserId)} cannout find playerId for the connection {context.ConnectionId}");
+            return Guid.Empty;
         };
 
-        var playerId = SuperplayUserProvider.GetUserId(_httpContextAccessor, _logger);
-        var player = await _dbContext.Players.FindAsync(playerId);
+        return id;
+    }
 
+    public static async Task<Player?> TryGetPlayer(ApplicationDbContext _dbContext, ISessionCacheHandler _cache, Microsoft.AspNetCore.SignalR.HubCallerContext context, ILogger _logger)
+    {
+        var playerId = SuperplayUserProvider.GetUserId(context, _cache, _logger);
+        var player = await _dbContext.Players.FindAsync(playerId);
         if (player == null)
         {
             _logger.LogWarning($"{nameof(TryGetPlayer)} The player with GUID={playerId} is not found in the database.");

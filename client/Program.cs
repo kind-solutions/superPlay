@@ -5,13 +5,14 @@ using Google.Protobuf;
 using Superplay.Protobuf.Messages;
 
 Player? LoggedInUser = null;
+var deviceId = "0a9ca9a6-d52b-4072-baca-2e5a8a419ad6";
 
 var connection = new HubConnectionBuilder()
     .WithUrl("wss://localhost:5001/chatHub", HttpTransportType.WebSockets, options =>
     {
         options.AccessTokenProvider = () =>
         {
-            return Task.FromResult(LoggedInUser?.Id);
+            return Task.FromResult(deviceId);
         };
     })
     .Build();
@@ -35,7 +36,7 @@ connection.Reconnecting += async (error) =>
 
 var login = new TaskCompletionSource<bool>();
 
-connection.On<byte[]>("LoginResponse", async payload =>
+connection.On<byte[]>("LoginResponse", payload =>
 {
     var response = LoginResponse.Parser.ParseFrom(payload);
     LoggedInUser = response.Myself;
@@ -43,8 +44,6 @@ connection.On<byte[]>("LoginResponse", async payload =>
     Console.WriteLine($"LoginResponse received token={LoggedInUser.Id}");
 
     //restart connection so the token is correctly set
-    await connection.StopAsync();
-    await connection.StartAsync();
     login.SetResult(true);
 });
 
@@ -68,7 +67,7 @@ while (true)
 
         var req = new UpdateResourcesRequest
         {
-            Type = random.NextDouble() > 0.5f ? ResourceType.Coins: ResourceType.Rolls,
+            Type = random.NextDouble() > 0.5f ? ResourceType.Coins : ResourceType.Rolls,
             Ammount = new ResourceValue { Value = random.Next(-100, 100) },
         };
         Console.WriteLine($"Sending {nameof(UpdateResourcesRequest)} {req} with size: {req.CalculateSize()}B");

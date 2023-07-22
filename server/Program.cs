@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Http.Connections;
 using Superplay.Hubs;
 using Superplay.Data;
 using Superplay.Authorization;
+using Superplay.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 var DbPath = "super.db";
@@ -23,6 +24,7 @@ builder.Services.AddScoped<IAuthorizationHandler, SuperplayAuthorizationHandler>
 
 builder.Services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
 builder.Services.AddSingleton<IUserIdProvider, SuperplayUserProvider>();
+builder.Services.AddSingleton<ISessionCacheHandler, SessionCacheHandler>();
 
 builder.Services.AddAuthorization(options =>
 {

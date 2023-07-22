@@ -4,40 +4,25 @@ using Superplay.Data;
 namespace Superplay.Authorization;
 public class SuperplayAuthorizationHandler : AuthorizationHandler<UuidAuthorizationRequirement>
 {
-    readonly IHttpContextAccessor _httpContextAccessor;
-    readonly ApplicationDbContext _context;
-
-    private static HashSet<Guid> playerCache = new();
-    public SuperplayAuthorizationHandler(IHttpContextAccessor httpContextAccessor, ApplicationDbContext context)
+    private readonly IHttpContextAccessor _httpContextAccessor;
+    private readonly ApplicationDbContext _context;
+    private readonly ISessionCacheHandler _cache;
+    public SuperplayAuthorizationHandler(IHttpContextAccessor httpContextAccessor, ApplicationDbContext context, ISessionCacheHandler cache)
     {
         _httpContextAccessor = httpContextAccessor;
         _context = context;
+        _cache = cache;
     }
     protected override Task HandleRequirementAsync(AuthorizationHandlerContext context, UuidAuthorizationRequirement requirement)
     {
+        var deviceId = SuperplayUserProvider.GetDeviceId(_httpContextAccessor);
 
-        var playerId = SuperplayUserProvider.GetUserId(_httpContextAccessor);
 
-        if (_httpContextAccessor.HttpContext == null || !Guid.TryParse(playerId, out var id))
+        if (!_cache.IsDeviceCached(deviceId))
         {
             context.Fail();
             return Task.CompletedTask;
         }
-
-        if (!playerCache.TryGetValue(id, out _))
-        {
-            var player = _context.Players.Find(id);
-            if (player == null)
-            {
-                context.Fail();
-                return Task.CompletedTask;
-            }
-
-            playerCache.Add(player.Id);
-        }
-
-
-        _httpContextAccessor.HttpContext.Items["player"] = playerId;
 
         context.Succeed(requirement);
         // Return completed task  
