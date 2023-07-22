@@ -173,6 +173,7 @@ public class EconomyHub : Hub
         if (friend.Id == player.Id)
         {
             _logger.LogWarning($"{nameof(SendGift)} The Player player with GUID={friendId} tried to gift himself.");
+            return;
         }
         switch (req.Type)
         {
