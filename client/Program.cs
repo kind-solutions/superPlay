@@ -61,11 +61,8 @@ connection.Reconnecting += async (error) =>
     Log.Information("Connection Reconnecting");
 };
 
-var login = new TaskCompletionSource<bool>();
-
 connection.On("RequestLogin", async () => {
     Initialized = false;
-    login = new TaskCompletionSource<bool>();
     await connection.SendAsync("Login");
 });
 
@@ -85,7 +82,6 @@ connection.On<byte[]>("LoginResponse", async payload =>
     Log.Information($"Device logged in, I am {response.Myself.Id}");
 
     //restart connection so the token is correctly set
-    login.SetResult(true);
 });
 
 connection.On<byte[]>("GiftEvent", payload =>
