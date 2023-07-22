@@ -23,7 +23,7 @@ public class EconomyHub : Hub
         _cache = cache;
         _httpContextAccessor = httpContextAccessor;
     }
-    public override Task OnConnectedAsync()
+    public override async Task OnConnectedAsync()
     {
         var deviceId = SuperplayUserProvider.GetDeviceId(_httpContextAccessor);
         _logger.LogTrace($"[{nameof(OnConnectedAsync)}] New peer connected with connectionId={Context.ConnectionId} and deviceId={deviceId}");
@@ -32,7 +32,9 @@ public class EconomyHub : Hub
             _cache.CacheDeviceConnection(deviceId, Context.ConnectionId);
         }
 
-        return base.OnConnectedAsync();
+        await Clients.Caller.SendAsync("RequestLogin");
+
+        await base.OnConnectedAsync();
     }
     public override Task OnDisconnectedAsync(Exception? exception)
     {

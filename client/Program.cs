@@ -23,7 +23,7 @@ do
 
 } while (!Guid.TryParse(deviceId, out _));
 
-var Connected = false;
+var Initialized = false;
 
 var connection = new HubConnectionBuilder()
     .WithUrl("wss://localhost:7133/chatHub", options =>
@@ -44,19 +44,19 @@ var connection = new HubConnectionBuilder()
 connection.Closed += async (error) =>
 {
     await Task.Delay(1);
-    Connected = false;
+    Initialized = false;
     Log.Information("Connection Closed");
 };
 connection.Reconnected += async (error) =>
 {
-    Connected = true;
+    Initialized = true;
     await Task.Delay(1);
     Log.Information("Connection Reconnected");
 };
 
 connection.Reconnecting += async (error) =>
 {
-    Connected = false;
+    Initialized = false;
     await Task.Delay(1);
     Log.Information("Connection Reconnecting");
 };
@@ -64,7 +64,7 @@ connection.Reconnecting += async (error) =>
 var login = new TaskCompletionSource<bool>();
 
 connection.On("RequestLogin", async () => {
-    Connected = false;
+    Initialized = false;
     login = new TaskCompletionSource<bool>();
     await connection.SendAsync("Login");
 });
@@ -75,12 +75,12 @@ connection.On<byte[]>("LoginResponse", async payload =>
 
     if (response.Myself == null)
     {
-        Log.Information($"I failed to login, will close connection");
-        Connected = false;
+        Log.Error($"I failed to login, will close connection");
+        Initialized = false;
         await connection.StopAsync();
         throw new UnauthorizedAccessException($"Login Failed");
     }
-    Connected = true;
+    Initialized = true;
 
     Log.Information($"Device logged in, I am {response.Myself.Id}");
 
@@ -94,24 +94,19 @@ connection.On<byte[]>("GiftEvent", payload =>
 
     if (response == null || response.From == null || response.From.Id == null || response.Ammount == null)
     {
-        Log.Information($"Received GiftEvent with bad data");
+        Log.Warning($"Received GiftEvent with bad data");
         return;
     }
-    Log.Information($"Received GiftEvent {response}");
+    Log.Debug($"Received GiftEvent {response} with size {response.CalculateSize()}B");
 
 });
 
 await connection.StartAsync();
 
-await connection.SendAsync("Login");
-
-await login.Task;
-
-
 var random = new Random();
 while (true)
 {
-    if (!Connected) continue;
+    if (!Initialized) continue;
     try
     {
         var coinFlip = random.NextDouble() > 0.5f;
@@ -126,7 +121,7 @@ while (true)
                 Type = anotherCoinFlip ? ResourceType.Coins : ResourceType.Rolls,
             };
 
-            Log.Information($"Sending {nameof(SendGiftRequest)} {req} with size: {req.CalculateSize()}B");
+            Log.Debug($"Sending {nameof(SendGiftRequest)} {req} with size: {req.CalculateSize()}B");
             await connection.SendAsync("SendGift", req.ToByteArray());
         }
         else
@@ -136,7 +131,7 @@ while (true)
                 Type = anotherCoinFlip ? ResourceType.Coins : ResourceType.Rolls,
                 Ammount = new ResourceValue { Value = random.Next(-100, 100) },
             };
-            Log.Information($"Sending {nameof(UpdateResourcesRequest)} {req} with size: {req.CalculateSize()}B");
+            Log.Debug($"Sending {nameof(UpdateResourcesRequest)} {req} with size: {req.CalculateSize()}B");
             await connection.SendAsync("UpdateResources", req.ToByteArray());
         }
 
@@ -146,6 +141,6 @@ while (true)
     catch (System.Exception e)
     {
 
-        Log.Information($"exception {e}");
+        Log.Error($"exception {e}");
     }
 }
