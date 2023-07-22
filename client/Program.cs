@@ -18,7 +18,7 @@ Log.Logger = new LoggerConfiguration()
 var deviceId = String.Empty;
 do
 {
-    Console.WriteLine("your device id:");
+    Console.Write("your device id: ");
     deviceId = Console.ReadLine();
 
 } while (!Guid.TryParse(deviceId, out _));
@@ -26,7 +26,7 @@ do
 var Connected = false;
 
 var connection = new HubConnectionBuilder()
-    .WithUrl("wss://localhost:5001/chatHub", options =>
+    .WithUrl("wss://localhost:7133/chatHub", options =>
     {
         options.AccessTokenProvider = () =>
         {
@@ -38,6 +38,7 @@ var connection = new HubConnectionBuilder()
         options.Transports = HttpTransportType.WebSockets;
         options.SkipNegotiation = true;
     })
+    .WithAutomaticReconnect()
     .Build();
 
 connection.Closed += async (error) =>
@@ -62,6 +63,12 @@ connection.Reconnecting += async (error) =>
 
 var login = new TaskCompletionSource<bool>();
 
+connection.On("RequestLogin", async () => {
+    Connected = false;
+    login = new TaskCompletionSource<bool>();
+    await connection.SendAsync("Login");
+});
+
 connection.On<byte[]>("LoginResponse", async payload =>
 {
     var response = LoginResponse.Parser.ParseFrom(payload);
@@ -69,9 +76,11 @@ connection.On<byte[]>("LoginResponse", async payload =>
     if (response.Myself == null)
     {
         Log.Information($"I failed to login, will close connection");
+        Connected = false;
         await connection.StopAsync();
         throw new UnauthorizedAccessException($"Login Failed");
     }
+    Connected = true;
 
     Log.Information($"Device logged in, I am {response.Myself.Id}");
 

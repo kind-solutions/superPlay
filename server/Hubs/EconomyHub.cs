@@ -119,6 +119,7 @@ public class EconomyHub : Hub
         {
             var playerId = SuperplayUserProvider.GetUserId(Context, _cache, _logger);
             _logger.LogWarning($"{nameof(UpdateResources)} The player with GUID={playerId} is not found in the database.");
+            await Clients.Caller.SendAsync("RequestLogin");
             return;
         }
 
@@ -185,6 +186,7 @@ public class EconomyHub : Hub
         if (player == null)
         {
             _logger.LogWarning($"{nameof(UpdateResources)} The player with GUID={playerId} is not found in the database.");
+            await Clients.Caller.SendAsync("RequestLogin");
             return;
         }
 

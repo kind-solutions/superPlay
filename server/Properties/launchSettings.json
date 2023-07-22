@@ -8,8 +8,8 @@
     "DisableStringReuse": true
   },
   "profiles": {
-    "superPlay": {
-      "commandName": "backend",
+    "Default": {
+      "commandName": "Project",
       "dotnetRunMessages": true,
       "applicationUrl": "https://localhost:7133;http://localhost:5018",
       "environmentVariables": {
