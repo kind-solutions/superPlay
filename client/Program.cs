@@ -1,8 +1,15 @@
 ﻿using Microsoft.AspNetCore.SignalR.Client;
 using Microsoft.AspNetCore.Http.Connections;
 using Google.Protobuf;
-
+using Serilog;
 using Superplay.Protobuf.Messages;
+
+Log.Logger = new LoggerConfiguration()
+                          // add console as logging target
+                          .WriteTo.Console()
+                          // set default minimum level
+                          .MinimumLevel.Debug()
+                          .CreateLogger();
 
 var deviceId = String.Empty;
 do
@@ -17,7 +24,7 @@ var connection = new HubConnectionBuilder()
     {
         options.AccessTokenProvider = () =>
         {
-            #pragma warning disable CS8619 //string is not string?
+#pragma warning disable CS8619 //string is not string?
             return Task.FromResult(deviceId);
         };
         options.Transports = HttpTransportType.WebSockets;
@@ -28,18 +35,18 @@ var connection = new HubConnectionBuilder()
 connection.Closed += async (error) =>
 {
     await Task.Delay(1);
-    Console.WriteLine("Connection Closed");
+    Log.Information("Connection Closed");
 };
 connection.Reconnected += async (error) =>
 {
     await Task.Delay(1);
-    Console.WriteLine("Connection Reconnected");
+    Log.Information("Connection Reconnected");
 };
 
 connection.Reconnecting += async (error) =>
 {
     await Task.Delay(1);
-    Console.WriteLine("Connection Reconnecting");
+    Log.Information("Connection Reconnecting");
 };
 
 var login = new TaskCompletionSource<bool>();
@@ -50,11 +57,11 @@ connection.On<byte[]>("LoginResponse", payload =>
 
     if (response.Myself == null)
     {
-        Console.WriteLine($"I failed to login, will crash");
+        Log.Information($"I failed to login, will crash");
         throw new UnauthorizedAccessException($"Login Failed");
     }
 
-    Console.WriteLine($"Device logged in, I am {response.Myself.Id}");
+    Log.Information($"Device logged in, I am {response.Myself.Id}");
 
     //restart connection so the token is correctly set
     login.SetResult(true);
@@ -64,12 +71,12 @@ connection.On<byte[]>("GiftEvent", payload =>
 {
     var response = GiftEvent.Parser.ParseFrom(payload);
 
-    if (response == null || response.From == null || response.From.Id == null ||  response.Ammount == null)
+    if (response == null || response.From == null || response.From.Id == null || response.Ammount == null)
     {
-        Console.WriteLine($"Received GiftEvent with bad data");
+        Log.Information($"Received GiftEvent with bad data");
         return;
     }
-    Console.WriteLine($"Received GiftEvent {response}");
+    Log.Information($"Received GiftEvent {response}");
 
 });
 
@@ -97,7 +104,7 @@ while (true)
                 Type = anotherCoinFlip ? ResourceType.Coins : ResourceType.Rolls,
             };
 
-            Console.WriteLine($"Sending {nameof(SendGiftRequest)} {req} with size: {req.CalculateSize()}B");
+            Log.Information($"Sending {nameof(SendGiftRequest)} {req} with size: {req.CalculateSize()}B");
             await connection.SendAsync("SendGift", req.ToByteArray());
         }
         else
@@ -107,7 +114,7 @@ while (true)
                 Type = anotherCoinFlip ? ResourceType.Coins : ResourceType.Rolls,
                 Ammount = new ResourceValue { Value = random.Next(-100, 100) },
             };
-            Console.WriteLine($"Sending {nameof(UpdateResourcesRequest)} {req} with size: {req.CalculateSize()}B");
+            Log.Information($"Sending {nameof(UpdateResourcesRequest)} {req} with size: {req.CalculateSize()}B");
             await connection.SendAsync("UpdateResources", req.ToByteArray());
         }
 
@@ -117,6 +124,6 @@ while (true)
     catch (System.Exception e)
     {
 
-        Console.WriteLine($"exception {e}");
+        Log.Information($"exception {e}");
     }
 }
