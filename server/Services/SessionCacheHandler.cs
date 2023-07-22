@@ -2,10 +2,11 @@
 
 namespace Superplay.Services;
 
+// DEMO IMPLEMENTATION
+// PROD should be based on redis or other in mem db service
 class SessionCacheHandler : ISessionCacheHandler
 {
-    // DEMO IMPLEMENTATION
-    // PROD should be based on redis or other in mem db
+
     private Dictionary<Guid, string> playerCache = new();
     private Dictionary<Guid, string> deviceCache = new();
 
@@ -21,17 +22,13 @@ class SessionCacheHandler : ISessionCacheHandler
     {
         return deviceCache.TryGetValue(id, out _); ;
     }
-    public bool IsConnectionCached(string id)
-    {
-        return false;
-    }
 
     public bool TryGetPlayerConnection(Guid id, out string? connection)
     {
         return playerCache.TryGetValue(id, out connection);
     }
 
-    public bool TryGetDeviceConnection(Guid id,  out string? connection)
+    public bool TryGetDeviceConnection(Guid id, out string? connection)
     {
         return deviceCache.TryGetValue(id, out connection);
     }

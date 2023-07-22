@@ -2,7 +2,10 @@ using Microsoft.AspNetCore.Authorization;
 using Superplay.Data;
 
 namespace Superplay.Authorization;
-public class SuperplayAuthorizationHandler : AuthorizationHandler<UuidAuthorizationRequirement>
+
+// FOR DEMO PURPOSES ONLY
+// in PROD it should be separated Identity service
+public class SuperplayAuthorizationHandler : AuthorizationHandler<SuperplayAuthorizationRequirement>
 {
     private readonly IHttpContextAccessor _httpContextAccessor;
     private readonly ApplicationDbContext _context;
@@ -13,7 +16,7 @@ public class SuperplayAuthorizationHandler : AuthorizationHandler<UuidAuthorizat
         _context = context;
         _cache = cache;
     }
-    protected override Task HandleRequirementAsync(AuthorizationHandlerContext context, UuidAuthorizationRequirement requirement)
+    protected override Task HandleRequirementAsync(AuthorizationHandlerContext context, SuperplayAuthorizationRequirement requirement)
     {
         var deviceId = SuperplayUserProvider.GetDeviceId(_httpContextAccessor);
 

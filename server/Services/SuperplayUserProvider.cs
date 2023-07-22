@@ -4,6 +4,7 @@ using Superplay.Data;
 using Superplay.Models;
 
 namespace Superplay.Authorization;
+
 public class SuperplayUserProvider : IUserIdProvider
 {
     readonly IHttpContextAccessor _httpContextAccessor;

@@ -30,7 +30,7 @@ builder.Services.AddAuthorization(options =>
 {
     options.AddPolicy("CustomHubAuthorizatioPolicy", policy =>
     {
-        policy.Requirements.Add(new UuidAuthorizationRequirement());
+        policy.Requirements.Add(new SuperplayAuthorizationRequirement());
     });
 });
 

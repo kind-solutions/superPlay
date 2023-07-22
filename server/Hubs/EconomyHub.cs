@@ -24,7 +24,7 @@ public class EconomyHub : Hub
     public override Task OnConnectedAsync()
     {
         var deviceId = SuperplayUserProvider.GetDeviceId(_httpContextAccessor);
-        _logger.LogInformation($"[{nameof(OnConnectedAsync)}] New peer connected with connectionId={Context.ConnectionId} and deviceId={deviceId}");
+        _logger.LogTrace($"[{nameof(OnConnectedAsync)}] New peer connected with connectionId={Context.ConnectionId} and deviceId={deviceId}");
         if (deviceId != Guid.Empty)
         {
             _cache.CacheDeviceConnection(deviceId, Context.ConnectionId);
@@ -34,7 +34,7 @@ public class EconomyHub : Hub
     }
     public override Task OnDisconnectedAsync(Exception? exception)
     {
-        _logger.LogInformation($"[{nameof(OnDisconnectedAsync)}] Peer with with connectionId={Context.ConnectionId} has disconnected");
+        _logger.LogTrace($"[{nameof(OnDisconnectedAsync)}] Peer with with connectionId={Context.ConnectionId} has disconnected");
         _cache.DeleteSession(Context.ConnectionId);
         return base.OnConnectedAsync();
     }
@@ -49,16 +49,19 @@ public class EconomyHub : Hub
         if (deviceId == Guid.Empty)
         {
             _logger.LogWarning($"[{nameof(Login)}] Invalid request");
+
+            _logger.LogDebug($"{nameof(Login)} Sending 'LoginResponse' with {res}, size {res.CalculateSize()}B");
             await Clients.Caller.SendAsync("LoginResponse", res.ToByteArray());
             return;
         }
 
-        _logger.LogTrace($"[{nameof(Login)}] Request from con={Context.ConnectionId} and deviceId={deviceId.ToString()}");
-        if (_cache.TryGetDeviceFromConnection(Context.ConnectionId, out Guid id))
+        _logger.LogTrace($"[{nameof(Login)}] Request from connection={Context.ConnectionId} and deviceId={deviceId.ToString()}");
+        if (_cache.TryGetDeviceFromConnection(Context.ConnectionId, out var id))
         {
             if (deviceId != id)
             {
-                _logger.LogInformation($"[{nameof(Login)}] Device already logged in deviceid={deviceId}");
+                _logger.LogWarning($"[{nameof(Login)}] Device id={deviceId} already logged in");
+                _logger.LogDebug($"{nameof(Login)} Sending 'LoginResponse' with {res}, size {res.CalculateSize()}B");
                 await Clients.Caller.SendAsync("LoginResponse", res.ToByteArray());
                 return;
             }
@@ -68,20 +71,24 @@ public class EconomyHub : Hub
 
         if (device == null)
         {
-            _logger.LogInformation($"[{nameof(Login)}] did not find device id={deviceId}");
+            _logger.LogWarning($"[{nameof(Login)}] did not find device id={deviceId}");
 
+            _logger.LogDebug($"{nameof(Login)} Sending 'LoginResponse' with {res}, size {res.CalculateSize()}B");
             await Clients.Caller.SendAsync("LoginResponse", res.ToByteArray());
             return;
 
         }
+        _logger.LogTrace($"[{nameof(Login)}] Found Device id={deviceId} in database");
 
         if (_cache.IsPlayerCached(device.PlayerId))
         {
-            _logger.LogInformation($"[{nameof(Login)}] Player {device.PlayerId} tried to log in from deviceId={device.Id} but is already logged in on antoher device");
+            _logger.LogWarning($"[{nameof(Login)}] Player {device.PlayerId} tried to log in from deviceId={device.Id} but is already logged in on antoher device");
+            _logger.LogDebug($"{nameof(Login)} Sending 'LoginResponse' with {res}, size {res.CalculateSize()}B");
             await Clients.Caller.SendAsync("LoginResponse", res.ToByteArray());
             return;
         }
 
+        _logger.LogTrace($"[{nameof(Login)}] Caching conId={Context.ConnectionId}, deviceId={device.Id}, playerId={device.PlayerId}");
         _cache.CacheSession(Context.ConnectionId, device.Id, device.PlayerId);
 
         res.Myself = new Player
@@ -89,6 +96,7 @@ public class EconomyHub : Hub
             Id = device.PlayerId.ToString(),
         };
 
+        _logger.LogDebug($"{nameof(Login)} Sending 'LoginResponse' with {res}, size {res.CalculateSize()}B");
         await Clients.Caller.SendAsync("LoginResponse", res.ToByteArray());
     }
 
@@ -123,11 +131,17 @@ public class EconomyHub : Hub
                 //we try to remove coins but player does not have enough
                 if (req.Ammount.Value < 0 && player.Coins < Math.Abs(req.Ammount.Value))
                 {
-
+                    _logger.LogWarning($"{nameof(UpdateResources)} The player with GUID={player.Id} does not have enough Coins");
+                    return;
                 }
                 player.Coins += req.Ammount.Value;
                 break;
             case ResourceType.Rolls:
+                if (req.Ammount.Value < 0 && player.Coins < Math.Abs(req.Ammount.Value))
+                {
+                    _logger.LogWarning($"{nameof(UpdateResources)} The player with GUID={player.Id} does not have enough Rolls");
+                    return;
+                }
                 player.Rolls += req.Ammount.Value;
                 break;
             default:
@@ -151,7 +165,12 @@ public class EconomyHub : Hub
             _logger.LogWarning($"{nameof(SendGift)} Bad request.");
             return;
         }
+        _logger.LogDebug($"[{nameof(SendGift)}] Received {req} with size {payload.Count()}B");
+
         var playerId = SuperplayUserProvider.GetUserId(Context, _cache, _logger);
+
+        _logger.LogDebug($"[{nameof(SendGift)}] Request is made by {playerId}");
+        _logger.LogDebug($"[{nameof(SendGift)}] Request is made for {friendId}");
 
         if (friendId == playerId)
         {
@@ -166,7 +185,8 @@ public class EconomyHub : Hub
             _logger.LogWarning($"{nameof(UpdateResources)} The player with GUID={playerId} is not found in the database.");
             return;
         }
-        _logger.LogDebug($"[{nameof(SendGift)}] Received {req} with size {payload.Count()}B");
+
+        _logger.LogTrace($"[{nameof(SendGift)}] Found Player id={playerId} in database");
 
         var friend = await SuperplayUserProvider.TryGetPlayer(friendId, _dbContext, _cache, Context, _logger);
 
@@ -176,10 +196,15 @@ public class EconomyHub : Hub
             return;
         }
 
+        _logger.LogTrace($"[{nameof(SendGift)}] Found Friend id={friendId} in database");
+
+        _logger.LogTrace($"{nameof(UpdateResources)} Player id={player.Id} has {player.Coins} coins and {player.Rolls} rolls before update");
+        _logger.LogTrace($"{nameof(UpdateResources)} Friend id={friend.Id} has {friend.Coins} coins and {friend.Rolls} rolls before update");
 
         switch (req.Type)
         {
             case ResourceType.Coins:
+                _logger.LogTrace($"[{nameof(SendGift)}] Updating coins");
                 if (player.Coins < req.Ammount.Value)
                 {
                     _logger.LogWarning($"{nameof(SendGift)} The Player {player.Id} does not have enough Coins.");
@@ -189,22 +214,26 @@ public class EconomyHub : Hub
                 player.Coins -= req.Ammount.Value;
                 break;
             case ResourceType.Rolls:
+                _logger.LogTrace($"[{nameof(SendGift)}] Updating Rolls");
                 if (player.Rolls < req.Ammount.Value)
                 {
-                    _logger.LogWarning($"{nameof(SendGift)} The Player {player.Id} does not have enough Coins.");
+                    _logger.LogWarning($"{nameof(SendGift)} The Player {player.Id} does not have enough Rolls.");
                     return;
                 }
                 friend.Rolls += req.Ammount.Value;
                 player.Rolls -= req.Ammount.Value;
                 break;
             default:
-                _logger.LogWarning($"{nameof(UpdateResources)} Unknown resourceType {req.Type}");
+                _logger.LogError($"{nameof(UpdateResources)} Unknown resourceType {req.Type}");
                 break;
         }
+        _logger.LogTrace($"{nameof(UpdateResources)} Player id={player.Id} has {player.Coins} coins and {player.Rolls} rolls after update");
+        _logger.LogTrace($"{nameof(UpdateResources)} Friend id={friend.Id} has {friend.Coins} coins and {friend.Rolls} rolls after update");
 
         //friend is online
         if (_cache.TryGetPlayerConnection(friend.Id, out var friendConnection) && friendConnection != null)
         {
+            _logger.LogTrace($"{nameof(UpdateResources)} Friend id={friend.Id} is online");
             var res = new GiftEvent
             {
                 From = new Player { Id = player.Id.ToString() },
@@ -212,6 +241,7 @@ public class EconomyHub : Hub
                 Type = req.Type,
             };
 
+            _logger.LogDebug($"{nameof(UpdateResources)} Sending 'GiftEvent' with {res}, size {res.CalculateSize()}B");
             await Clients.Client(friendConnection).SendAsync("GiftEvent", res.ToByteArray());
         }
 

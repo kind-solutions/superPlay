@@ -16,10 +16,12 @@ Log.Logger = new LoggerConfiguration()
 var deviceId = String.Empty;
 do
 {
+    Console.WriteLine("your device id:");
     deviceId = Console.ReadLine();
 
 } while (!Guid.TryParse(deviceId, out _));
 
+var Connected = false;
 
 var connection = new HubConnectionBuilder()
     .WithUrl("wss://localhost:5001/chatHub", options =>
@@ -28,7 +30,9 @@ var connection = new HubConnectionBuilder()
         {
 #pragma warning disable CS8619 //string is not string?
             return Task.FromResult(deviceId);
+
         };
+
         options.Transports = HttpTransportType.WebSockets;
         options.SkipNegotiation = true;
     })
@@ -37,29 +41,33 @@ var connection = new HubConnectionBuilder()
 connection.Closed += async (error) =>
 {
     await Task.Delay(1);
+    Connected = false;
     Log.Information("Connection Closed");
 };
 connection.Reconnected += async (error) =>
 {
+    Connected = true;
     await Task.Delay(1);
     Log.Information("Connection Reconnected");
 };
 
 connection.Reconnecting += async (error) =>
 {
+    Connected = false;
     await Task.Delay(1);
     Log.Information("Connection Reconnecting");
 };
 
 var login = new TaskCompletionSource<bool>();
 
-connection.On<byte[]>("LoginResponse", payload =>
+connection.On<byte[]>("LoginResponse", async payload =>
 {
     var response = LoginResponse.Parser.ParseFrom(payload);
 
     if (response.Myself == null)
     {
-        Log.Information($"I failed to login, will crash");
+        Log.Information($"I failed to login, will close connection");
+        await connection.StopAsync();
         throw new UnauthorizedAccessException($"Login Failed");
     }
 
@@ -92,6 +100,7 @@ await login.Task;
 var random = new Random();
 while (true)
 {
+    if (!Connected) continue;
     try
     {
         var coinFlip = random.NextDouble() > 0.5f;
