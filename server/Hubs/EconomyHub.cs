@@ -24,6 +24,7 @@ public class EconomyHub : Hub
     public override Task OnConnectedAsync()
     {
         var deviceId = SuperplayUserProvider.GetDeviceId(_httpContextAccessor);
+        _logger.LogInformation($"[{nameof(OnConnectedAsync)}] New peer connected with connectionId={Context.ConnectionId} and deviceId={deviceId}");
         if (deviceId != Guid.Empty)
         {
             _cache.CacheDeviceConnection(deviceId, Context.ConnectionId);
@@ -33,6 +34,7 @@ public class EconomyHub : Hub
     }
     public override Task OnDisconnectedAsync(Exception? exception)
     {
+        _logger.LogInformation($"[{nameof(OnDisconnectedAsync)}] Peer with with connectionId={Context.ConnectionId} has disconnected");
         _cache.DeleteSession(Context.ConnectionId);
         return base.OnConnectedAsync();
     }
@@ -95,19 +97,18 @@ public class EconomyHub : Hub
     [Authorize(Policy = "CustomHubAuthorizatioPolicy")]
     public async Task UpdateResources(byte[] payload)
     {
+        var req = UpdateResourcesRequest.Parser.ParseFrom(payload);
+        if (req == null)
+        {
+            _logger.LogWarning($"{nameof(UpdateResources)} Bad request.");
+            return;
+        }
         var player = await SuperplayUserProvider.TryGetCaller(_dbContext, _cache, Context, _logger);
 
         if (player == null)
         {
             var playerId = SuperplayUserProvider.GetUserId(Context, _cache, _logger);
             _logger.LogWarning($"{nameof(UpdateResources)} The player with GUID={playerId} is not found in the database.");
-            return;
-        }
-
-        var req = UpdateResourcesRequest.Parser.ParseFrom(payload);
-        if (req == null)
-        {
-            _logger.LogWarning($"{nameof(UpdateResources)} Bad request.");
             return;
         }
 
@@ -142,15 +143,6 @@ public class EconomyHub : Hub
     [Authorize(Policy = "CustomHubAuthorizatioPolicy")]
     public async Task SendGift(byte[] payload)
     {
-        var player = await SuperplayUserProvider.TryGetCaller(_dbContext, _cache, Context, _logger);
-
-        if (player == null)
-        {
-            var playerId = SuperplayUserProvider.GetUserId(Context, _cache, _logger);
-            _logger.LogWarning($"{nameof(UpdateResources)} The player with GUID={playerId} is not found in the database.");
-            return;
-        }
-
         var req = SendGiftRequest.Parser.ParseFrom(payload);
 
         //validate request {valid friend and ammount}
@@ -159,7 +151,21 @@ public class EconomyHub : Hub
             _logger.LogWarning($"{nameof(SendGift)} Bad request.");
             return;
         }
+        var playerId = SuperplayUserProvider.GetUserId(Context, _cache, _logger);
 
+        if (friendId == playerId)
+        {
+            _logger.LogWarning($"{nameof(SendGift)} The Player player with GUID={friendId} tried to gift himself.");
+            return;
+        }
+
+        var player = await SuperplayUserProvider.TryGetPlayer(playerId, _dbContext, _cache, Context, _logger);
+
+        if (player == null)
+        {
+            _logger.LogWarning($"{nameof(UpdateResources)} The player with GUID={playerId} is not found in the database.");
+            return;
+        }
         _logger.LogDebug($"[{nameof(SendGift)}] Received {req} with size {payload.Count()}B");
 
         var friend = await SuperplayUserProvider.TryGetPlayer(friendId, _dbContext, _cache, Context, _logger);
@@ -170,11 +176,7 @@ public class EconomyHub : Hub
             return;
         }
 
-        if (friend.Id == player.Id)
-        {
-            _logger.LogWarning($"{nameof(SendGift)} The Player player with GUID={friendId} tried to gift himself.");
-            return;
-        }
+
         switch (req.Type)
         {
             case ResourceType.Coins:

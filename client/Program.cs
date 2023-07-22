@@ -11,6 +11,8 @@ Log.Logger = new LoggerConfiguration()
                           .MinimumLevel.Debug()
                           .CreateLogger();
 
+
+
 var deviceId = String.Empty;
 do
 {
