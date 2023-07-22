@@ -1,4 +1,4 @@
-
+//Copyright 2023 Niculae Ioan-Paul <niculae.paul@gmail.com>
 
 namespace Superplay.Services;
 

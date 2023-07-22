@@ -1,5 +1,5 @@
-using System;
-using System.Collections.Generic;
+//Copyright 2023 Niculae Ioan-Paul <niculae.paul@gmail.com>
+
 
 namespace Superplay.Models
 {

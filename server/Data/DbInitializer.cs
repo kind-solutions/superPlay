@@ -1,3 +1,5 @@
+//Copyright 2023 Niculae Ioan-Paul <niculae.paul@gmail.com>
+
 using Superplay.Models;
 using System;
 using System.Linq;

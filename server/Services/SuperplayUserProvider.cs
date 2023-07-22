@@ -1,3 +1,5 @@
+//Copyright 2023 Niculae Ioan-Paul <niculae.paul@gmail.com>
+
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.Net.Http.Headers;
 using Superplay.Data;

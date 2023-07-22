@@ -1,4 +1,6 @@
-﻿using Microsoft.AspNetCore.SignalR.Client;
+﻿//Copyright 2023 Niculae Ioan-Paul <niculae.paul@gmail.com>
+
+using Microsoft.AspNetCore.SignalR.Client;
 using Microsoft.AspNetCore.Http.Connections;
 using Google.Protobuf;
 using Serilog;

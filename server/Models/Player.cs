@@ -1,8 +1,7 @@
+//Copyright 2023 Niculae Ioan-Paul <niculae.paul@gmail.com>
 
 namespace Superplay.Models
 {
-
-
     public class Player
     {
         public Guid Id { get; set; }

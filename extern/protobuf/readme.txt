@@ -10,3 +10,7 @@ copy the contents of the 'include' directory somewhere as well, for example
 into '/usr/local/include/'.
 Please refer to our official github site for more installation instructions:
   https://github.com/protocolbuffers/protobuf
+
+Niculae Ioan-Paul:
+
+call generate.bat to create the DTOs

@@ -1,4 +1,7 @@
+//Copyright 2023 Niculae Ioan-Paul <niculae.paul@gmail.com>
+
 syntax = "proto3";
+
 import "ResourceType.proto";
 import "ResourceValue.proto";
 
