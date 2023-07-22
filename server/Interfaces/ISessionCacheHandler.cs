@@ -6,6 +6,8 @@ public interface ISessionCacheHandler
     public bool IsDeviceCached(Guid id);
     public bool IsConnectionCached(string id);
 
+    public bool TryGetPlayerConnection(Guid id, out string? connection);
+    public bool TryGetDeviceConnection(Guid id, out string? connection);
 
     public bool CacheSession(string connection, Guid device, Guid player);
     public bool TryGetSession(string connection, out (Guid, Guid) session);

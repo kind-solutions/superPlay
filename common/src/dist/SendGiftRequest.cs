@@ -25,14 +25,15 @@ namespace Superplay.Protobuf.Messages {
       byte[] descriptorData = global::System.Convert.FromBase64String(
           string.Concat(
             "ChVTZW5kR2lmdFJlcXVlc3QucHJvdG8SCVN1cGVycGxheRoSUmVzb3VyY2VU",
-            "eXBlLnByb3RvGhNSZXNvdXJjZVZhbHVlLnByb3RvImMKD1NlbmRHaWZ0UmVx",
+            "eXBlLnByb3RvGhNSZXNvdXJjZVZhbHVlLnByb3RvInUKD1NlbmRHaWZ0UmVx",
             "dWVzdBIlCgR0eXBlGAEgASgOMhcuU3VwZXJwbGF5LlJlc291cmNlVHlwZRIp",
-            "CgdhbW1vdW50GAIgASgLMhguU3VwZXJwbGF5LlJlc291cmNlVmFsdWVCHqoC",
-            "G1N1cGVycGxheS5Qcm90b2J1Zi5NZXNzYWdlc2IGcHJvdG8z"));
+            "CgdhbW1vdW50GAIgASgLMhguU3VwZXJwbGF5LlJlc291cmNlVmFsdWUSEAoI",
+            "ZnJpZW5kSWQYAyABKAlCHqoCG1N1cGVycGxheS5Qcm90b2J1Zi5NZXNzYWdl",
+            "c2IGcHJvdG8z"));
       descriptor = pbr::FileDescriptor.FromGeneratedCode(descriptorData,
           new pbr::FileDescriptor[] { global::Superplay.Protobuf.Messages.ResourceTypeReflection.Descriptor, global::Superplay.Protobuf.Messages.ResourceValueReflection.Descriptor, },
           new pbr::GeneratedClrTypeInfo(null, null, new pbr::GeneratedClrTypeInfo[] {
-            new pbr::GeneratedClrTypeInfo(typeof(global::Superplay.Protobuf.Messages.SendGiftRequest), global::Superplay.Protobuf.Messages.SendGiftRequest.Parser, new[]{ "Type", "Ammount" }, null, null, null, null)
+            new pbr::GeneratedClrTypeInfo(typeof(global::Superplay.Protobuf.Messages.SendGiftRequest), global::Superplay.Protobuf.Messages.SendGiftRequest.Parser, new[]{ "Type", "Ammount", "FriendId" }, null, null, null, null)
           }));
     }
     #endregion
@@ -75,6 +76,7 @@ namespace Superplay.Protobuf.Messages {
     public SendGiftRequest(SendGiftRequest other) : this() {
       type_ = other.type_;
       ammount_ = other.ammount_ != null ? other.ammount_.Clone() : null;
+      friendId_ = other.friendId_;
       _unknownFields = pb::UnknownFieldSet.Clone(other._unknownFields);
     }
 
@@ -108,6 +110,18 @@ namespace Superplay.Protobuf.Messages {
       }
     }
 
+    /// <summary>Field number for the "friendId" field.</summary>
+    public const int FriendIdFieldNumber = 3;
+    private string friendId_ = "";
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public string FriendId {
+      get { return friendId_; }
+      set {
+        friendId_ = pb::ProtoPreconditions.CheckNotNull(value, "value");
+      }
+    }
+
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
     public override bool Equals(object other) {
@@ -125,6 +139,7 @@ namespace Superplay.Protobuf.Messages {
       }
       if (Type != other.Type) return false;
       if (!object.Equals(Ammount, other.Ammount)) return false;
+      if (FriendId != other.FriendId) return false;
       return Equals(_unknownFields, other._unknownFields);
     }
 
@@ -134,6 +149,7 @@ namespace Superplay.Protobuf.Messages {
       int hash = 1;
       if (Type != global::Superplay.Protobuf.Messages.ResourceType.Coins) hash ^= Type.GetHashCode();
       if (ammount_ != null) hash ^= Ammount.GetHashCode();
+      if (FriendId.Length != 0) hash ^= FriendId.GetHashCode();
       if (_unknownFields != null) {
         hash ^= _unknownFields.GetHashCode();
       }
@@ -160,6 +176,10 @@ namespace Superplay.Protobuf.Messages {
         output.WriteRawTag(18);
         output.WriteMessage(Ammount);
       }
+      if (FriendId.Length != 0) {
+        output.WriteRawTag(26);
+        output.WriteString(FriendId);
+      }
       if (_unknownFields != null) {
         _unknownFields.WriteTo(output);
       }
@@ -178,6 +198,10 @@ namespace Superplay.Protobuf.Messages {
         output.WriteRawTag(18);
         output.WriteMessage(Ammount);
       }
+      if (FriendId.Length != 0) {
+        output.WriteRawTag(26);
+        output.WriteString(FriendId);
+      }
       if (_unknownFields != null) {
         _unknownFields.WriteTo(ref output);
       }
@@ -193,6 +217,9 @@ namespace Superplay.Protobuf.Messages {
       }
       if (ammount_ != null) {
         size += 1 + pb::CodedOutputStream.ComputeMessageSize(Ammount);
+      }
+      if (FriendId.Length != 0) {
+        size += 1 + pb::CodedOutputStream.ComputeStringSize(FriendId);
       }
       if (_unknownFields != null) {
         size += _unknownFields.CalculateSize();
@@ -214,6 +241,9 @@ namespace Superplay.Protobuf.Messages {
           Ammount = new global::Superplay.Protobuf.Messages.ResourceValue();
         }
         Ammount.MergeFrom(other.Ammount);
+      }
+      if (other.FriendId.Length != 0) {
+        FriendId = other.FriendId;
       }
       _unknownFields = pb::UnknownFieldSet.MergeFrom(_unknownFields, other._unknownFields);
     }
@@ -241,6 +271,10 @@ namespace Superplay.Protobuf.Messages {
             input.ReadMessage(Ammount);
             break;
           }
+          case 26: {
+            FriendId = input.ReadString();
+            break;
+          }
         }
       }
     #endif
@@ -265,6 +299,10 @@ namespace Superplay.Protobuf.Messages {
               Ammount = new global::Superplay.Protobuf.Messages.ResourceValue();
             }
             input.ReadMessage(Ammount);
+            break;
+          }
+          case 26: {
+            FriendId = input.ReadString();
             break;
           }
         }

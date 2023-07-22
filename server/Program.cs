@@ -40,7 +40,7 @@ builder.Host.UseSerilog();
 
 if (builder.Environment.IsDevelopment())
 {
-    builder.Services.AddDatabaseDeveloperPageExceptionFilter();
+    // builder.Services.AddDatabaseDeveloperPageExceptionFilter();
 
 }
 var app = builder.Build();
@@ -61,7 +61,7 @@ app.UseHttpsRedirection();
 app.UseAuthorization();
 
 app.MapControllers();
-app.MapHub<ChatHub>("/chatHub", options =>
+app.MapHub<EconomyHub>("/chatHub", options =>
 {
     options.Transports = HttpTransportType.WebSockets;
 });

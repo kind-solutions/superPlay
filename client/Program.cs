@@ -4,16 +4,24 @@ using Google.Protobuf;
 
 using Superplay.Protobuf.Messages;
 
-Player? LoggedInUser = null;
-var deviceId = "0a9ca9a6-d52b-4072-baca-2e5a8a419ad6";
+var deviceId = String.Empty;
+do
+{
+    deviceId = Console.ReadLine();
+
+} while (!Guid.TryParse(deviceId, out _));
+
 
 var connection = new HubConnectionBuilder()
-    .WithUrl("wss://localhost:5001/chatHub", HttpTransportType.WebSockets, options =>
+    .WithUrl("wss://localhost:5001/chatHub", options =>
     {
         options.AccessTokenProvider = () =>
         {
+            #pragma warning disable CS8619 //string is not string?
             return Task.FromResult(deviceId);
         };
+        options.Transports = HttpTransportType.WebSockets;
+        options.SkipNegotiation = true;
     })
     .Build();
 
@@ -39,22 +47,35 @@ var login = new TaskCompletionSource<bool>();
 connection.On<byte[]>("LoginResponse", payload =>
 {
     var response = LoginResponse.Parser.ParseFrom(payload);
-    LoggedInUser = response.Myself;
 
-    Console.WriteLine($"LoginResponse received token={LoggedInUser.Id}");
+    if (response.Myself == null)
+    {
+        Console.WriteLine($"I failed to login, will crash");
+        throw new UnauthorizedAccessException($"Login Failed");
+    }
+
+    Console.WriteLine($"Device logged in, I am {response.Myself.Id}");
 
     //restart connection so the token is correctly set
     login.SetResult(true);
 });
 
+connection.On<byte[]>("GiftEvent", payload =>
+{
+    var response = GiftEvent.Parser.ParseFrom(payload);
+
+    if (response == null || response.From == null || response.From.Id == null ||  response.Ammount == null)
+    {
+        Console.WriteLine($"Received GiftEvent with bad data");
+        return;
+    }
+    Console.WriteLine($"Received GiftEvent {response}");
+
+});
+
 await connection.StartAsync();
 
-var loginRequest = new LoginRequest
-{
-    Udid = "0a9ca9a6-d52b-4072-baca-2e5a8a419ad6",
-};
-
-await connection.SendAsync("Login", loginRequest.ToByteArray());
+await connection.SendAsync("Login");
 
 await login.Task;
 
@@ -64,14 +85,32 @@ while (true)
 {
     try
     {
+        var coinFlip = random.NextDouble() > 0.5f;
+        var anotherCoinFlip = random.NextDouble() > 0.5f;
 
-        var req = new UpdateResourcesRequest
+        if (coinFlip)
         {
-            Type = random.NextDouble() > 0.5f ? ResourceType.Coins : ResourceType.Rolls,
-            Ammount = new ResourceValue { Value = random.Next(-100, 100) },
-        };
-        Console.WriteLine($"Sending {nameof(UpdateResourcesRequest)} {req} with size: {req.CalculateSize()}B");
-        await connection.SendAsync("UpdateResources", req.ToByteArray());
+            var req = new SendGiftRequest
+            {
+                FriendId = "674cb2bf-8288-4c7b-b1f2-3c8701c37eca",
+                Ammount = new ResourceValue { Value = random.Next(1, 10) },
+                Type = anotherCoinFlip ? ResourceType.Coins : ResourceType.Rolls,
+            };
+
+            Console.WriteLine($"Sending {nameof(SendGiftRequest)} {req} with size: {req.CalculateSize()}B");
+            await connection.SendAsync("SendGift", req.ToByteArray());
+        }
+        else
+        {
+            var req = new UpdateResourcesRequest
+            {
+                Type = anotherCoinFlip ? ResourceType.Coins : ResourceType.Rolls,
+                Ammount = new ResourceValue { Value = random.Next(-100, 100) },
+            };
+            Console.WriteLine($"Sending {nameof(UpdateResourcesRequest)} {req} with size: {req.CalculateSize()}B");
+            await connection.SendAsync("UpdateResources", req.ToByteArray());
+        }
+
         await Task.Delay(300);
 
     }

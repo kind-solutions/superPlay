@@ -9,4 +9,5 @@ option csharp_namespace = "Superplay.Protobuf.Messages";
 message SendGiftRequest {
   ResourceType type = 1;
   ResourceValue ammount = 2;
+  string friendId = 3;
 }

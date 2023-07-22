@@ -1,9 +1,0 @@
-syntax = "proto3";
-
-package Superplay;
-
-option csharp_namespace = "Superplay.Protobuf.Messages";
-
-message LoginRequest {
-  string udid = 1;
-}

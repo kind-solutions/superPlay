@@ -64,9 +64,14 @@ public class SuperplayUserProvider : IUserIdProvider
         return id;
     }
 
-    public static async Task<Player?> TryGetPlayer(ApplicationDbContext _dbContext, ISessionCacheHandler _cache, Microsoft.AspNetCore.SignalR.HubCallerContext context, ILogger _logger)
+    public static async Task<Player?> TryGetCaller(ApplicationDbContext _dbContext, ISessionCacheHandler _cache, Microsoft.AspNetCore.SignalR.HubCallerContext context, ILogger _logger)
     {
         var playerId = SuperplayUserProvider.GetUserId(context, _cache, _logger);
+        return await TryGetPlayer(playerId, _dbContext, _cache, context, _logger);
+    }
+
+    public static async Task<Player?> TryGetPlayer(Guid playerId, ApplicationDbContext _dbContext, ISessionCacheHandler _cache, Microsoft.AspNetCore.SignalR.HubCallerContext context, ILogger _logger)
+    {
         var player = await _dbContext.Players.FindAsync(playerId);
         if (player == null)
         {

@@ -26,6 +26,16 @@ class SessionCacheHandler : ISessionCacheHandler
         return false;
     }
 
+    public bool TryGetPlayerConnection(Guid id, out string? connection)
+    {
+        return playerCache.TryGetValue(id, out connection);
+    }
+
+    public bool TryGetDeviceConnection(Guid id,  out string? connection)
+    {
+        return deviceCache.TryGetValue(id, out connection);
+    }
+
     public bool CacheSession(string connection, Guid device, Guid player)
     {
         var success = true;
