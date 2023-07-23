@@ -475,3 +475,7 @@ $RECYCLE.BIN/
 
 # Windows shortcuts
 *.lnk
+
+super.sqlite
+super.sqlite-shm
+super.sqlite-wal

@@ -17,11 +17,8 @@ namespace Superplay.Data
                 // Look for any players.
                 if (context.Players.Any())
                 {
+                    PrintDeviceIds(context);
 
-                    foreach (var device in context.Devices)
-                    {
-                        Console.WriteLine($"deviceId={device.Id} playerId={device.PlayerId}");
-                    }
                     return;   // DB has been seeded
                 }
                 var random = new Random(12345);
@@ -39,9 +36,9 @@ namespace Superplay.Data
 
                     context.Players.Add(player);
 
-                    var numberOfDevicesForPlayer = random.Next(5, 50);
+                    var numberOfDevicesPerPlayer = random.Next(5, 50);
 
-                    for (int j = 0; j < numberOfDevicesForPlayer; j++)
+                    for (int j = 0; j < numberOfDevicesPerPlayer; j++)
                     {
                         var coinFlip = random.NextDouble() < 0.5;
 
@@ -56,8 +53,19 @@ namespace Superplay.Data
                     }
 
                 }
+
                 context.SaveChanges();
+                PrintDeviceIds(context);
             }
         }
+
+        public static void PrintDeviceIds(ApplicationDbContext context)
+        {
+            foreach (var device in context.Devices)
+            {
+                Console.WriteLine($"deviceId={device.Id} playerId={device.PlayerId}");
+            }
+        }
+
     }
 }

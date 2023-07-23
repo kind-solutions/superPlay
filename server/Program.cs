@@ -13,7 +13,7 @@ using Superplay.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
-var DbPath = "super.db";
+var DbPath = "super.sqlite";
 builder.Services.AddDbContext<ApplicationDbContext>(options => options.UseSqlite($"Data Source={DbPath}"));
 
 Log.Logger = new LoggerConfiguration()

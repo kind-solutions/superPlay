@@ -11,14 +11,15 @@ public class SuperplayAuthorizationHandler : AuthorizationHandler<SuperplayAutho
 {
     public static readonly string POLICY = "SuperplayAuthorizationPolicy";
     private readonly IHttpContextAccessor _httpContextAccessor;
-    private readonly ApplicationDbContext _context;
     private readonly ISessionCacheHandler _cache;
-    public SuperplayAuthorizationHandler(IHttpContextAccessor httpContextAccessor, ApplicationDbContext context, ISessionCacheHandler cache)
+
+
+    public SuperplayAuthorizationHandler(IHttpContextAccessor httpContextAccessor, ISessionCacheHandler cache)
     {
         _httpContextAccessor = httpContextAccessor;
-        _context = context;
         _cache = cache;
     }
+
     protected override Task HandleRequirementAsync(AuthorizationHandlerContext context, SuperplayAuthorizationRequirement requirement)
     {
         var deviceId = SuperplayUserProvider.GetDeviceId(_httpContextAccessor);

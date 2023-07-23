@@ -6,6 +6,7 @@ using Superplay.Data;
 using Superplay.Models;
 
 namespace Superplay.Authorization;
+using HubContext = Microsoft.AspNetCore.SignalR.HubCallerContext;
 
 public class SuperplayUserProvider : IUserIdProvider
 {
@@ -56,7 +57,7 @@ public class SuperplayUserProvider : IUserIdProvider
         return Guid.Empty;
     }
 
-    public static Guid GetUserId(Microsoft.AspNetCore.SignalR.HubCallerContext context, ISessionCacheHandler _cache, ILogger _logger)
+    public static Guid GetUserId(HubContext context, ISessionCacheHandler _cache, ILogger _logger)
     {
         if (!_cache.TryGetPlayerFromConnection(context.ConnectionId, out var id))
         {
@@ -67,13 +68,13 @@ public class SuperplayUserProvider : IUserIdProvider
         return id;
     }
 
-    public static async Task<Player?> TryGetCaller(ApplicationDbContext _dbContext, ISessionCacheHandler _cache, Microsoft.AspNetCore.SignalR.HubCallerContext context, ILogger _logger)
+    public static async Task<Player?> TryGetCaller(ApplicationDbContext _dbContext, ISessionCacheHandler _cache, HubContext context, ILogger _logger)
     {
         var playerId = SuperplayUserProvider.GetUserId(context, _cache, _logger);
-        return await TryGetPlayer(playerId, _dbContext, _cache, context, _logger);
+        return await TryGetPlayer(playerId, _dbContext, _cache, _logger);
     }
 
-    public static async Task<Player?> TryGetPlayer(Guid playerId, ApplicationDbContext _dbContext, ISessionCacheHandler _cache, Microsoft.AspNetCore.SignalR.HubCallerContext context, ILogger _logger)
+    public static async Task<Player?> TryGetPlayer(Guid playerId, ApplicationDbContext _dbContext, ISessionCacheHandler _cache, ILogger _logger)
     {
         var player = await _dbContext.Players.FindAsync(playerId);
         if (player == null)

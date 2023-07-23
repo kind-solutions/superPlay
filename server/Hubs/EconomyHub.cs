@@ -185,7 +185,7 @@ public class EconomyHub : Hub
             return;
         }
 
-        var player = await SuperplayUserProvider.TryGetPlayer(playerId, _dbContext, _cache, Context, _logger);
+        var player = await SuperplayUserProvider.TryGetPlayer(playerId, _dbContext, _cache, _logger);
 
         if (player == null)
         {
@@ -196,7 +196,7 @@ public class EconomyHub : Hub
 
         _logger.LogTrace($"[{nameof(SendGift)}] Found Player id={playerId} in database");
 
-        var friend = await SuperplayUserProvider.TryGetPlayer(friendId, _dbContext, _cache, Context, _logger);
+        var friend = await SuperplayUserProvider.TryGetPlayer(friendId, _dbContext, _cache, _logger);
 
         if (friend == null)
         {
