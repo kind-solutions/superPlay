@@ -23,6 +23,7 @@ public class EconomyHub : Hub
         _cache = cache;
         _httpContextAccessor = httpContextAccessor;
     }
+
     public override async Task OnConnectedAsync()
     {
         var deviceId = SuperplayUserProvider.GetDeviceId(_httpContextAccessor);
@@ -42,6 +43,8 @@ public class EconomyHub : Hub
         _cache.DeleteSession(Context.ConnectionId);
         return base.OnConnectedAsync();
     }
+
+
     [AllowAnonymous]
     public async Task Login()
     {
@@ -105,8 +108,7 @@ public class EconomyHub : Hub
     }
 
 
-
-    [Authorize(Policy = "CustomHubAuthorizatioPolicy")]
+    [Authorize(Policy = "SuperplayAuthorizationPolicy")]
     public async Task UpdateResources(byte[] payload)
     {
         var req = UpdateResourcesRequest.Parser.ParseFrom(payload);
@@ -159,7 +161,7 @@ public class EconomyHub : Hub
 
     }
 
-    [Authorize(Policy = "CustomHubAuthorizatioPolicy")]
+    [Authorize(Policy = "SuperplayAuthorizationPolicy")]
     public async Task SendGift(byte[] payload)
     {
         var req = SendGiftRequest.Parser.ParseFrom(payload);

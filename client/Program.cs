@@ -26,7 +26,7 @@ do
 var Initialized = false;
 
 var connection = new HubConnectionBuilder()
-    .WithUrl("wss://localhost:7133/chatHub", options =>
+    .WithUrl("wss://localhost:7133/economy", options =>
     {
         options.AccessTokenProvider = () =>
         {
@@ -61,7 +61,8 @@ connection.Reconnecting += async (error) =>
     Log.Information("Connection Reconnecting");
 };
 
-connection.On("RequestLogin", async () => {
+connection.On("RequestLogin", async () =>
+{
     Initialized = false;
     await connection.SendAsync("Login");
 });

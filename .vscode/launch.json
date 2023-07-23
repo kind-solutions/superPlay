@@ -10,7 +10,7 @@
             "request": "launch",
             "preLaunchTask": "build server",
             // If you have changed target frameworks, make sure to update the program path.
-            "program": "${workspaceFolder}/server/bin/Debug/net6.0/superPlay.dll",
+            "program": "${workspaceFolder}/server/bin/Debug/net6.0/server.dll",
             "args": [],
             "cwd": "${workspaceFolder}/server",
             "stopAtEntry": false,

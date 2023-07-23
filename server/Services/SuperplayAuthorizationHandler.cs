@@ -9,6 +9,7 @@ namespace Superplay.Authorization;
 // in PROD it should be separated Identity service
 public class SuperplayAuthorizationHandler : AuthorizationHandler<SuperplayAuthorizationRequirement>
 {
+    public static readonly string POLICY = "SuperplayAuthorizationPolicy";
     private readonly IHttpContextAccessor _httpContextAccessor;
     private readonly ApplicationDbContext _context;
     private readonly ISessionCacheHandler _cache;
